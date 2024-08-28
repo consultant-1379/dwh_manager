@@ -1,0 +1,45 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$viewName' AND vcreator='dcpublic') > 0
+BEGIN
+  DROP VIEW dcpublic.$viewName
+END
+
+commit
+
+#set( $sqlIncluded = 0 )
+#set( $columnNames = "")
+#set( $first_col = 1 )
+
+#foreach ( $col in $columns )
+#if ($col.getIncludesql() == 1)
+#set( $sqlIncluded = 1 )
+#if( $first_col == 1 )
+#set( $columnNames = "$col.getDataname()")
+#set( $first_col = 0 )
+#else
+#set( $currentColumn = "$col.getDataname()")
+#set( $columnNames = "$columnNames,$currentColumn")
+#end
+#end 
+#end
+
+
+#if( $listOfViews.size() > 0 )
+#set ($ix = 1)
+#end
+
+CREATE VIEW dcpublic.$viewName AS 
+#foreach( $view in $listOfViews )
+SELECT
+$columnNames,$ix as VIEW_NUMBER
+FROM dc.$view
+#if( $ix < $listOfViews.size())
+UNION ALL
+#end
+#set ($ix = $ix + 1)
+#end
+
+#if ($sqlIncluded == 1)
+GRANT SELECT on dcpublic.$viewName TO dcpublic
+#end
+
+commit

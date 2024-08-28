@@ -1,0 +1,1 @@
+insert into TPActivation (TECHPACK_NAME, STATUS, VERSIONID, TYPE, MODIFIED) values ('EVENT_E_TEST', 'ACTIVE', 'EVENT_E_TEST:((1))', 'ENIQ_EVENT', 0);

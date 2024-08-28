@@ -1,0 +1,4 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$name' AND vcreator='dc') > 0 THEN
+  DROP VIEW $name;
+END IF;
+create view $name ($keyColumns, DATE_ID, HOUR_ID, ROWSTATUS, BHTYPE, BHVALUE, PERIOD_DURATION, DC_RELEASE, DC_SOURCE, DC_TIMEZONE, MINUTE_OFFSET, SLIDING_WINDOW_SIZE, P_THRESHOLD, N_THRESHOLD, LOOKBACK_DAYS ) as select $keyValues, ${firsttable}DATE_ID, ${firsttable}HOUR_ID, ${firsttable}ROWSTATUS, $bhtype, cast($bhcriteria as numeric(28,8)), sum(${firsttable}PERIOD_DURATION), ${firsttable}DC_RELEASE, ${firsttable}DC_SOURCE, ${firsttable}DC_TIMEZONE, $offset, $windowsize, $pthreshold, $nthreshold, $lookback $from $where group by $keyValues, ${firsttable}DATE_ID, ${firsttable}HOUR_ID, ${firsttable}ROWSTATUS, $bhtype, ${firsttable}DC_RELEASE, ${firsttable}DC_SOURCE, ${firsttable}DC_TIMEZONE;

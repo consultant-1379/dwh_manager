@@ -1,0 +1,49 @@
+
+
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$baseTableName' AND vcreator='dcpublic') > 0
+BEGIN
+  DROP VIEW dcpublic.$baseTableName
+END
+
+COMMIT
+
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$baseTableName' AND vcreator='dc') > 0
+BEGIN
+  DROP VIEW dc.$baseTableName
+END
+
+COMMIT
+
+
+CREATE VIEW dc.$baseTableName 
+($dcVec,
+$val,
+#if ($quant == 'true')
+QUANTITY,
+#end
+DC_RELEASE
+) 
+AS SELECT
+DCVECTOR,
+VALUE,
+#if ($quant == 'true')
+QUANTITY,
+#end
+DCRELEASE
+FROM dc.$vectorRefTable
+WHERE TABLE_COUNTER = '$baseTableName'
+
+
+
+GRANT SELECT ON dc.$baseTableName TO dc
+
+GRANT SELECT ON dc.$baseTableName TO dcbo
+
+GRANT SELECT ON dc.$baseTableName TO dcpublic
+
+
+
+COMMIT
+
+
+

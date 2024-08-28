@@ -1,0 +1,4 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$name' AND vcreator='dc') > 0 THEN
+  DROP VIEW $name;
+END IF;
+CREATE VIEW ${name} AS SELECT * FROM ${name}_DC;   

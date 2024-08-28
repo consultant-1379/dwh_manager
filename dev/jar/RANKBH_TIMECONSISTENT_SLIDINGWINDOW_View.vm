@@ -1,0 +1,80 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$name' AND vcreator='dc') > 0 THEN
+  DROP VIEW $name;
+END IF;
+create view $name ( 
+$keyColumns,
+DATE_ID,
+HOUR_ID,
+MIN_ID,
+ROWSTATUS,
+BHTYPE,
+BHVALUE,
+PERIOD_DURATION,
+DC_RELEASE,
+DC_SOURCE,
+DC_TIMEZONE,
+MINUTE_OFFSET,
+SLIDING_WINDOW_SIZE,
+P_THRESHOLD,
+N_THRESHOLD,
+LOOKBACK_DAYS) as 
+select 
+	$keyValues, 
+    dateadd(day,-tt.DAY_ID,${firsttable}DATE_ID),
+    tt.i/60,
+    tt.i-((tt.i/60)*60),
+    ${firsttable}ROWSTATUS,
+    $bhtype,
+    cast($bhcriteria as numeric(28,8)),
+    sum(${firsttable}PERIOD_DURATION),
+    ${firsttable}DC_RELEASE,
+    ${firsttable}DC_SOURCE,
+    ${firsttable}DC_TIMEZONE,
+    min(tt.OFFSET),
+    min(tt.WINDOWSIZE),
+	$pthreshold,
+ 	$nthreshold,
+    $lookback 
+	$from_COMMA
+    (select 
+            WINDOWSIZE, 
+            OFFSET,
+            DAY_ID,
+            HOUR_ID,
+            MIN_ID,
+            ((((((((d.DAY_ID*60*24)+(HOUR_ID)*60+MIN_ID)+(d.WINDOWSIZE-d.OFFSET))/d.WINDOWSIZE)-1)*d.WINDOWSIZE))) as i 
+            from 
+            (select 
+                $windowsize WINDOWSIZE,
+                $offset OFFSET,
+                0 DAY_ID,
+                HOUR_ID,
+                MIN_ID
+                from 
+                DIM_TIME union all 
+                select 
+                    $windowsize WINDOWSIZE,
+                    $offset OFFSET,
+                    1 DAY_ID,
+                    HOUR_ID,
+                    MIN_ID 
+                    from 
+                    DIM_TIME
+            ) as d 
+            where 
+            ((((((((d.DAY_ID*60*24)+(HOUR_ID)*60+MIN_ID)+(d.WINDOWSIZE-d.OFFSET))/d.WINDOWSIZE)-1)*d.WINDOWSIZE))) >= 0 
+            and ((((((((d.DAY_ID*60*24)+(HOUR_ID)*60+MIN_ID)+(d.WINDOWSIZE-d.OFFSET))/d.WINDOWSIZE)-1)*d.WINDOWSIZE))) < 1440 
+        ) as tt
+    $where_ALLWAYS
+    ${firsttable}HOUR_ID = tt.HOUR_ID and
+    ${firsttable}MIN_ID = tt.MIN_ID
+    group by 
+	$keyValues,
+    dateadd(day,-tt.DAY_ID,${firsttable}DATE_ID),
+    tt.i/60,
+    tt.i-((tt.i/60)*60),
+    ${firsttable}ROWSTATUS,
+    $bhtype,
+    ${firsttable}DC_RELEASE,
+    ${firsttable}DC_SOURCE,
+    ${firsttable}DC_TIMEZONE;

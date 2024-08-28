@@ -1,0 +1,42 @@
+
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$baseTableName' AND vcreator='dc') > 0
+BEGIN
+  DROP VIEW dc.$baseTableName
+END
+
+commit
+
+#if( $partitions.size() > 0 )
+  #set ($ix = 1)
+
+  #set( $first_col = 1 )
+
+  CREATE VIEW dc.$baseTableName AS
+  #foreach( $part in $partitions )
+    SELECT 
+    #foreach ( $col in $columns )
+      #if($col.getDataname() != "VALID")
+        #if( $first_col == 1 )
+          $col.getDataname()
+          #set( $first_col = 0 )
+        #else
+          ,$col.getDataname()
+        #end 
+      #end
+    #end
+    #set( $first_col = 1 )
+    FROM dc.$part.getTablename()
+    WHERE VALID=1
+    #if( $ix < $partitions.size())
+      UNION ALL
+    #end
+    #set ($ix = $ix + 1)
+  #end
+
+
+  GRANT SELECT ON dc.$baseTableName TO dc
+  GRANT SELECT ON dc.$baseTableName TO dcbo
+
+  commit
+
+#end

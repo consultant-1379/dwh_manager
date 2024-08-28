@@ -1,0 +1,11 @@
+Truncate table ${user_name}.${typename};
+
+LOAD TABLE ${user_name}.${typename}
+(${meas}_DCVECTOR, ${meas}_VALUE, DC_RELEASE)
+FROM '${FILE_NAME}'
+ESCAPES OFF
+QUOTES OFF
+DELIMITED BY '\x09'
+ROW DELIMITED BY '\x0a'
+WITH CHECKPOINT ON
+;

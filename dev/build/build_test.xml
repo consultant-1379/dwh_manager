@@ -1,0 +1,73 @@
+<project name="dwh_manager" default="test_all">
+    <property name="module.name" value="dwh_manager"/>
+    <property file="${user.home}/EniqBuild/BH/build.properties"/>
+    <property name="ant.common" value="${cc.base}/tools/ant_common"/>
+    <property file="${ant.common}/common.properties"/>
+    <property name="module.base" value="${module.dwh_manager.base}"/>
+    <property name="module.build" value="${module.dwh_manager.build}"/>
+    <property name="module.dependants" value="${module.dwh_manager.dependants}"/>
+    <import file="${ant.common}/common.xml"/>
+    <property name="tests.to.run" value="**/*Test.class"/>
+	<property name="tests.to.exclude" value="**com/distocraft/dc5000/dwhm/VersionUpdateActionTest.class,
+											**com/distocraft/dc5000/dwhm/StorageTimeActionIntegTest.class"/>
+    <property name="mods.needed" value="repository, common_utilities, engine"/>
+	<property name="rep.src" value="${module.repository.base}/src"/>
+	<property name="rep.cls" value="${module.build}/repo"/>
+	
+	<path id="repo_cp">
+        <path refid="plaform.lib.classpath"/>
+        <path location="${module.common_utilities.pkg}"/>
+        <path location="${module.scheduler.pkg}"/>
+        <path location="${module.engine.pkg}"/>
+		<path refid="appframework"/>
+    </path>
+
+    <path id="dwh_manager.lib.classpath">
+    	<path location="${rep.cls}"/>
+        <path refid="plaform.lib.classpath"/>
+        <path location="${module.repository.pkg}"/>
+        <path location="${module.common_utilities.pkg}"/>
+        <path location="${module.engine.pkg}"/>
+        <path location="${module.licensing.pkg}"/>
+    </path>
+    <path id="dwh_manager.test.classpath">
+        <path refid="platform.test.classpath"/>
+        <path refid="dwh_manager.lib.classpath"/>
+		<path location="${module.dwh_manager.base}/test"/>
+		<path location="${module.dwh_manager.base}/jar"/>
+		<path location="${eniq.tools}/testhelper/jar"/>
+    </path>
+	
+	<target name="pre_compile" depends="recompile.repository.code">
+		<!-- <antcall target="recompile.repository.code"/>
+		<antcall target="copy.setupSQL.to.classpath"/>	
+		<antcall target="copy.vm.files.to.classpath"/> -->
+	</target>
+	
+	<!--<target name="copy.vm.files.to.classpath" description="">
+		<property name="module.build.test.classes" value="${module.build}/test/classes/"/>
+		<mkdir dir="${module.build.test.classes}"/>
+		<copy todir="${module.build.test.classes}">
+			<fileset dir="${module.base}/jar/"/>
+		</copy>
+	</target>-->
+	
+		
+	<!--<target name="copy.setupSQL.to.classpath" description="need to copy in the test/setupSQL sql files to the classes folder, didnt work for some reason">
+		<property name="module.build.setupSQL" value="${module.build}/test/classes/setupSQL"/>
+		<mkdir dir="${module.build.setupSQL}"/>
+		<copy todir="${module.build.setupSQL}">
+			<fileset dir="${module.base}/test/setupSQL"/>
+		</copy>
+	</target>-->
+		
+	
+	<target name="recompile.repository.code">
+		<echo message="Recompiling repository to remove signer info (easymock doesnt like it....)"/>
+		<delete dir="${rep.cls}" verbose="false"/>
+		<mkdir dir="${rep.cls}"/>
+		<mcompile destdir="${rep.cls}" srcpath="${rep.src}" classpathref="repo_cp" include="**/*.java"/>		
+	</target>
+
+</project>
+	

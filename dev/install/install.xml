@@ -1,0 +1,34 @@
+<project name="install" basedir="." default="all">
+
+	<property name="dcinstall.require.common" value="> 5-0-0b85" />
+	<property name="dcinstall.require.engine" value="> 5-0-0b304" />
+	<property name="dcinstall.require.repository" value="> 5-0-0b104" />
+
+	<target name="install" depends="copyTmpToDeploy">
+		<antcall target="check_dir">
+			<param name="dir" value="${dc.conf.dir}/dwhm_templates" />
+		</antcall>
+
+		<antcall target="run_one_sql">
+			<param name="dbname" value="dwhrep" />
+			<param name="sqlfile" value="setPublicViewTemplatesForSimpleTypes.sql" />
+		</antcall>
+
+		<if>
+			<available file="${dc.runtime.dir}/tomcat/webapps/techpackide/lib/dwhmanager.jar" />
+			<then>
+				<delete file="${dc.runtime.dir}/tomcat/webapps/techpackide/lib/dwhmanager.jar" />
+				<copy todir="${dc.runtime.dir}/tomcat/webapps/techpackide/lib" flatten="true">
+					<fileset dir="${dc.platform.dir}">
+						<include name="**/dclib/dwhmanager.jar" />
+					</fileset>
+				</copy>
+			</then>
+			<else />
+		</if>
+
+	</target>
+
+	<target name="update" depends="moveToObsolete,install" />
+
+</project>

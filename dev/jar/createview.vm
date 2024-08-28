@@ -1,0 +1,726 @@
+
+
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$baseTableName' AND vcreator='dc') > 0
+
+BEGIN
+
+  DROP VIEW dc.$baseTableName
+
+END
+
+
+
+COMMIT
+
+
+
+#if( $partitions.size() > 0 )
+
+#set ($ix = 1)
+
+
+
+CREATE VIEW dc.$baseTableName AS
+
+#foreach( $part in $partitions )
+
+SELECT * FROM dc.$part.getTablename()
+
+#if( $ix < $partitions.size())
+
+UNION ALL
+
+#end
+
+#set ($ix = $ix + 1)
+
+#end
+
+
+
+GRANT SELECT ON dc.$baseTableName TO dc
+
+GRANT SELECT ON dc.$baseTableName TO dcbo
+
+
+
+COMMIT
+
+
+
+
+
+##
+
+### create _distinct_dates views only for measurements that have count table level for STATS only
+
+##
+
+
+
+#if(($techPackType == "STATS" ||$techPackType=="CUSTOM" ) && (($hasCount == 'true' && $type.getTablelevel() == 'RAW') || $type.getTablelevel() == 'COUNT'))
+
+
+
+### _DISTINCT_DATES view
+
+##
+
+
+
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$type.getBasetablename()_DISTINCT_DATES' AND vcreator='dc') > 0
+
+BEGIN
+
+  DROP VIEW dc.$type.getBasetablename()_DISTINCT_DATES
+
+END
+
+
+
+COMMIT
+
+
+
+CREATE VIEW dc.$type.getBasetablename()_DISTINCT_DATES AS
+
+#set ($ix = 1)
+
+#foreach( $part in $partitions )
+
+SELECT DISTINCT date_id FROM dc.$part.getTablename()
+
+#if( $ix < $partitions.size())
+
+UNION ALL
+
+#end
+
+#set ($ix = $ix + 1)
+
+#end
+
+
+
+GRANT SELECT ON dc.$type.getBasetablename()_DISTINCT_DATES TO dc
+
+GRANT SELECT ON dc.$type.getBasetablename()_DISTINCT_DATES TO dcbo
+
+GRANT SELECT ON dc.$type.getBasetablename()_DISTINCT_DATES TO dcpublic
+
+
+
+COMMIT
+
+
+
+#end ## if(($hasCount == 'true' && $type.getTablelevel() == 'RAW') || $type.getTablelevel() == 'COUNT')
+
+
+
+#if($type.getTablelevel() == 'COUNT')
+
+
+
+### Fact Table_DELTA view (for COUNT only, assume _RAW_DISTINCT_DATES view created already)
+
+##
+
+
+
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$type.getTypename()_DELTA' AND vcreator='dc') > 0
+
+BEGIN
+
+  DROP VIEW dc.$type.getTypename()_DELTA
+
+END
+
+
+
+COMMIT
+
+
+
+#set($multiplesupport = false)
+
+#foreach($col in $measCounters)
+
+#if("$col.getCountaggregation()" == "GAUGE")
+
+#set($multiplesupport = false)
+
+#elseif("$col.getCountaggregation()" == "PEG")
+
+#set($multiplesupport = false)
+
+#elseif("$col.getCountaggregation()" != "GAUGE" && "$col.getCountaggregation()" != "PEG")
+
+#set($multiplesupport = true)
+
+#set($supportfirst = true)
+
+#set($treatAs = "false")
+
+#set($Countaggregations = $col.getCountaggregation())
+
+#set($instructions = $Countaggregations.split(":"))
+
+#set($collectVersions = true)
+
+#foreach($instruction in $instructions)
+
+#if($collectVersions == true)
+
+#set($versions = $instruction)
+
+#set($collectVersions = false)
+
+#else
+
+#set($treatAs = $instruction)
+
+#end
+
+#end
+
+#set($releases = $versions.split("/"))
+
+#set($considerGaugeRel = false)
+
+#foreach($release in $releases)
+
+#if($treatAs == "true")
+
+#set($considerGaugeRel = true)
+
+#end
+
+#if($supportfirst == true || $considerGaugeRel == true)
+
+#set($relfirst = true)
+
+#set($countChecks = $release.split(";"))
+
+#foreach($countCheck in $countChecks)
+
+#if($supportfirst == false && $relfirst == true)
+
+#set($unSupportedCountVersion = $countCheck)
+
+#set($considerGaugeRel = false)
+
+#set($relfirst = false)
+
+#else
+
+#if($relfirst == true )
+
+#set($supportedCountVersion = $countCheck)
+
+#set($relfirst = false)
+
+#end
+
+#set($supportfirst = false)
+
+#end
+
+#end
+
+#end
+
+#end
+
+#end
+
+#end
+
+
+
+CREATE VIEW dc.$type.getTypename()_DELTA
+
+AS
+
+SELECT DISTINCT
+
+##
+
+## unique keys
+
+##
+
+#set($first = true)
+
+#foreach($col in $measKeys)
+
+#if($first) 
+
+c.$col.getDataname()
+
+#set($first = false)
+
+#else 
+
+,c.$col.getDataname()
+
+#end
+
+#end
+
+,c.DATE_ID
+
+,c.YEAR_ID
+
+,c.MONTH_ID
+
+,c.DAY_ID
+
+,c.HOUR_ID
+
+,c.DATETIME_ID
+
+,c.MIN_ID
+
+,c.TIMELEVEL
+
+,c.SESSION_ID
+
+,c.BATCH_ID
+
+,c.PERIOD_DURATION
+
+#set($peg = false)
+
+#set($first = true)
+
+#foreach($col in $measCounters)
+
+#if($multiplesupport == false )
+
+#if("$col.getCountaggregation()" == "PEG" )
+
+#set($peg = true)
+
+#if($first)
+
+#set($first = false)
+
+#end
+
+#end 
+
+#else
+
+#set($supportfirst = true)
+
+#set($Countaggregations = $col.getCountaggregation())
+
+#set($releases = $Countaggregations.split("/"))
+
+#foreach($release in $releases)
+
+#if($supportfirst == true )
+
+#set($relfirst = true)
+
+#set($countChecks = $release.split(";"))
+
+#foreach($countCheck in $countChecks)
+
+#if($relfirst == true )
+
+#set($relfirst = false)
+
+#else
+
+#set($supportedCountRule = $countCheck)
+
+#end
+
+#end
+
+#set($supportfirst = false)
+
+#end
+
+#end
+
+#if("$supportedCountRule" == "PEG" )
+
+#set($peg = true)
+
+#if($first)
+
+#set($first = false)
+
+#end
+
+#end
+
+#end
+
+#end 
+
+##,'AGGREGATED' AS ROWSTATUS
+
+,if c.ROWSTATUS like '%TBA_%' or c.ROWSTATUS like '%PBA_%' then c.ROWSTATUS   else 'AGGREGATED'  endif AS ROWSTATUS
+
+,c.DC_RELEASE
+
+,c.DC_SOURCE
+
+,c.DC_TIMEZONE
+
+,c.UTC_DATETIME_ID
+
+##
+
+## Aggregated Columns
+
+##
+
+#foreach($col in $measCounters)
+
+#if($multiplesupport == false )
+
+#if("$col.getCountaggregation()" == "PEG" && "$col.getCountertype()" != "GAUGE")
+
+,if p.$col.getDataname() > c.$col.getDataname() then NULL
+
+else c.$col.getDataname() - p.$col.getDataname()
+
+endif AS $col.getDataname()
+
+#else
+
+,c.$col.getDataname()
+
+#end 
+
+#else
+
+#set($supportfirst = true)
+
+#set($Countaggregations = $col.getCountaggregation())
+
+#set($releases = $Countaggregations.split("/"))
+
+#foreach($release in $releases)
+
+#if($supportfirst == true )
+
+#set($relfirst = true)
+
+#set($countChecks = $release.split(";"))
+
+#foreach($countCheck in $countChecks)
+
+#if($relfirst == true )
+
+#set($relfirst = false)
+
+#else
+
+#set($supportedCountRule = $countCheck)
+
+#end
+
+#end
+
+#set($supportfirst = false)
+
+#end
+
+#end
+
+#if("$supportedCountRule" == "PEG" && "$col.getCountertype()" != "GAUGE")
+
+,if p.$col.getDataname() > c.$col.getDataname() then NULL
+
+else c.$col.getDataname() - p.$col.getDataname()
+
+endif AS $col.getDataname()
+
+#else
+
+,c.$col.getDataname()
+
+#end
+
+#end 
+
+#end
+
+FROM  dc.$type.getTypename()_RAW c 
+
+JOIN (SELECT date_id, COUNT(*) raw_count FROM (SELECT date_id FROM dc.$type.getTypename()_RAW_DISTINCT_DATES UNION ALL SELECT date_id FROM dc.$type.getTypename()_COUNT_DISTINCT_DATES) dates GROUP BY date_id HAVING COUNT(*)=1) t1 ON (c.date_id = t1.date_id)
+
+	, dc.$type.getTypename()_RAW p 
+
+JOIN (SELECT date_id, COUNT(*) raw_count FROM (SELECT date_id FROM dc.$type.getTypename()_RAW_DISTINCT_DATES UNION ALL SELECT date_id FROM dc.$type.getTypename()_COUNT_DISTINCT_DATES) dates GROUP BY date_id HAVING COUNT(*)=1) t2 ON (p.date_id = t2.date_id OR p.date_id = DATEADD(day, -1, t2.date_id))  
+
+WHERE
+
+c.ROWSTATUS NOT IN ('DUPLICATE','SUSPECTED')
+
+AND p.ROWSTATUS NOT IN ('DUPLICATE','SUSPECTED') 
+
+#if($multiplesupport == true )
+
+#if($treatAs == "true")
+
+#set ($countVersion = $unSupportedCountVersion)
+
+#else
+
+#set ($countVersion = $supportedCountVersion)
+
+#end
+
+#set ($countVersion = $countVersion.replaceAll("PEG/", ","))
+
+#set ($countVersion = $countVersion.replaceAll("GAUGE", ","))
+
+#set ($countVersion = $countVersion.replaceAll(";", ""))
+
+#set ($TmpCountVersion = $countVersion.split(","))
+
+#set ($countVersion ="")
+
+#set ($FirstCnt = true)
+
+#foreach($CntAggr in $TmpCountVersion)
+
+#if ($FirstCnt == true)
+
+#set ($CntAggr = "'$CntAggr'")
+
+#set ($FirstCnt = false)
+
+#else
+
+#set ($CntAggr = ",'$CntAggr'")
+
+#end
+
+#set ($countVersion = ("$countVersion$CntAggr"))
+
+#end 
+
+#if($treatAs == "true")
+
+AND c.DC_RELEASE NOT IN ($countVersion)
+
+#else
+
+AND c.DC_RELEASE IN ($countVersion)
+
+#end
+
+#end
+
+#foreach($col in $measKeys)
+
+#if ($col.getUniquekey() == 1)
+
+AND p.$col.getDataname() = c.$col.getDataname()
+
+#end
+
+#end
+
+AND p.DATETIME_ID = DATEADD(Minute, - c.PERIOD_DURATION, c.DATETIME_ID)
+
+
+
+#if($multiplesupport == "true" )
+
+UNION ALL
+
+SELECT DISTINCT
+
+##
+
+## unique keys
+
+##
+
+#set($first = true)
+
+#foreach($col in $measKeys)
+
+#if($first) 
+
+c.$col.getDataname()
+
+#set($first = false)
+
+#else 
+
+,c.$col.getDataname()
+
+#end
+
+#end
+
+,c.DATE_ID
+
+,c.YEAR_ID
+
+,c.MONTH_ID
+
+,c.DAY_ID
+
+,c.HOUR_ID
+
+,c.DATETIME_ID
+
+,c.MIN_ID
+
+,c.TIMELEVEL
+
+,c.SESSION_ID
+
+,c.BATCH_ID
+
+,c.PERIOD_DURATION
+
+##,'AGGREGATED' AS ROWSTATUS
+
+,if c.ROWSTATUS like '%TBA_%' or c.ROWSTATUS like '%PBA_%' then c.ROWSTATUS   else 'AGGREGATED'  endif AS ROWSTATUS
+
+,c.DC_RELEASE
+
+,c.DC_SOURCE
+
+,c.DC_TIMEZONE
+
+,c.UTC_DATETIME_ID
+
+##
+
+## Aggregated Columns
+
+##
+
+#foreach($col in $measCounters)
+
+,c.$col.getDataname()
+
+#end
+
+FROM dc.$type.getTypename()_RAW c
+
+JOIN (SELECT date_id, COUNT(*) raw_count FROM (SELECT date_id FROM dc.$type.getTypename()_RAW_DISTINCT_DATES UNION ALL SELECT date_id FROM dc.$type.getTypename()_COUNT_DISTINCT_DATES) dates GROUP BY date_id HAVING COUNT(*)=1) t1 ON (c.date_id = t1.date_id)   
+
+#if($treatAs == "true")
+
+WHERE c.DC_RELEASE IN ($countVersion)
+
+#else
+
+WHERE c.DC_RELEASE NOT IN ($countVersion)
+
+#end
+
+AND c.ROWSTATUS NOT IN ('DUPLICATE','SUSPECTED')
+
+#end
+
+
+
+UNION ALL
+
+SELECT 
+
+##
+
+## unique keys
+
+##
+
+#set($first = true)
+
+#foreach($col in $measKeys)
+
+#if($first) 
+
+$col.getDataname()
+
+#set($first = false)
+
+#else 
+
+,$col.getDataname()
+
+#end
+
+#end
+
+,DATE_ID
+
+,YEAR_ID
+
+,MONTH_ID
+
+,DAY_ID
+
+,HOUR_ID
+
+,DATETIME_ID
+
+,MIN_ID
+
+,TIMELEVEL
+
+,SESSION_ID
+
+,BATCH_ID
+
+,PERIOD_DURATION
+
+,ROWSTATUS
+
+,DC_RELEASE
+
+,DC_SOURCE
+
+,DC_TIMEZONE
+
+,UTC_DATETIME_ID
+
+##
+
+## Aggregated Columns
+
+##
+
+#foreach($col in $measCounters)
+
+,$col.getDataname()
+
+#end 
+
+FROM dc.$type.getTypename()_COUNT
+
+
+
+
+
+GRANT SELECT ON dc.$type.getTypename()_DELTA TO dc
+
+GRANT SELECT ON dc.$type.getTypename()_DELTA TO dcbo
+
+GRANT SELECT ON dc.$type.getTypename()_DELTA TO dcpublic
+
+
+
+COMMIT
+
+#end ## if($type.getTablelevel() == 'COUNT')
+
+
+
+#end ## if( $partitions.size() > 0 )
+

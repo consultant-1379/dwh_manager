@@ -1,0 +1,13 @@
+diskmanager	-	engine		-	engine_5-0-0b44.jar		-	vobs/eniq_design/plat/etl_controller/build/engine
+diskmanager	-	engine		-	engine_test.jar			-	Is this needed??????????????????????????????????????????????????
+diskmanager	-	common		-	common_5-0-0b14.jar		-	vobs/eniq_design/plat/common_utilities/build/common_utilities
+diskmanager	-	repository	-	repository_5-0-0b34.jar		-	vobs/eniq_design/plat/installer/build/repository
+
+
+dwhmanager	-	common		-	common_5-0-0b119.jar		-	vobs/eniq_design/plat/common_utilities/build/common_utilities
+dwhmanager	-	dbunit		-	dbunit-2.1_dc.jar		-	vobs/eniq_3pp/dbunit/dbunit/v21/prod
+dwhmanager	-	engine		-	engine_5-0-0b418.jar		-	vobs/eniq_design/plat/etl_controller/build/engine
+dwhmanager	-	junit		-	junit.jar			-	Nothing in the 3pp for this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+dwhmanager	-	repository	-	repository_5-0-0b176.jar	-	vobs/eniq_design/plat/installer/build/repository
+dwhmanager	-	testhelper	-	testhelper_5-0-0b14.jar		-	Is this needed??????????????????????????????????????????????????
+dwhmanager	-	velocity	-	velocity-dep-1.2.jar		-	vobs/eniq_3pp/apache/jakarta_velocity/v12/prod

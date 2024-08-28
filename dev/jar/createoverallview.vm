@@ -1,0 +1,25 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$viewName' AND vcreator='dc') > 0
+BEGIN
+  DROP VIEW dc.$viewName
+END
+
+commit
+
+#if( $listOfViews.size() > 0 )
+#set ($ix = 1)
+
+CREATE VIEW dc.$viewName AS
+#foreach( $view in $listOfViews )
+SELECT *,$ix as VIEW_NUMBER FROM dc.$view
+#if( $ix < $listOfViews.size())
+UNION ALL
+#end
+#set ($ix = $ix + 1)
+#end
+
+GRANT SELECT ON dc.$viewName TO dc
+GRANT SELECT ON dc.$viewName TO dcbo
+
+commit
+
+#end

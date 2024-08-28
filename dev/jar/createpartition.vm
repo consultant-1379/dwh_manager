@@ -1,0 +1,73 @@
+
+
+#set ($first_col = 1)
+CREATE TABLE dc.$tableName (
+#foreach( $col in $columns )
+#if( $first_col == 1 )
+#if ( $col.getDatasize() > 0 && $col.getDatascale() > 0)
+#if ($col.getNullable() == 0)
+$col.getDataname() $col.getDatatype() ($col.getDatasize(),$col.getDatascale()) NOT NULL
+#else
+$col.getDataname() $col.getDatatype() ($col.getDatasize(),$col.getDatascale()) NULL
+#end
+#elseif ( $col.getDatasize() > 0 && $col.getDatascale() == 0)
+#if ($col.getNullable() == 0)
+$col.getDataname() $col.getDatatype() ($col.getDatasize()) NOT NULL    
+#else
+$col.getDataname() $col.getDatatype() ($col.getDatasize()) NULL    
+#end
+#else
+#if ($col.getNullable() == 0)
+$col.getDataname() $col.getDatatype() NOT NULL
+#else
+$col.getDataname() $col.getDatatype() NULL
+#end
+#end
+#set( $first_col = 0 )
+#else ## not first line of columns
+#if ( $col.getDatasize() > 0 && $col.getDatascale() > 0)
+#if ($col.getNullable() == 0)
+,$col.getDataname() $col.getDatatype() ($col.getDatasize(),$col.getDatascale()) NOT NULL
+#else
+,$col.getDataname() $col.getDatatype() ($col.getDatasize(),$col.getDatascale()) NULL
+#end
+#elseif ( $col.getDatasize() > 0 && $col.getDatascale() == 0)
+#if ($col.getNullable() == 0)
+,$col.getDataname() $col.getDatatype() ($col.getDatasize()) NOT NULL    
+#else
+,$col.getDataname() $col.getDatatype() ($col.getDatasize()) NULL    
+#end
+#else
+#if ($col.getNullable() == 0)
+,$col.getDataname() $col.getDatatype() NOT NULL
+#else
+,$col.getDataname() $col.getDatatype() NULL
+#end
+#end
+#end
+#end
+);
+
+##commit;
+
+BEGIN PARALLEL IQ
+
+#foreach ( $col in $columns )
+#foreach ( $split in $col.getIndexes().split(",") )
+#if ($split.trim().length()>0)
+CREATE $split INDEX ${tableName}_$col.getDataname()_$split ON dc.${tableName}($col.getDataname());
+#end
+#end
+#end
+
+END PARALLEL IQ;
+
+##commit;
+
+GRANT ALL ON dc.${tableName} TO dc;
+
+#if ($type.getType().equalsIgnoreCase("SIMPLE"))
+GRANT SELECT ON dc.${tableName} TO dcbo;
+#end
+
+commit;

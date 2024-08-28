@@ -1,0 +1,26 @@
+
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$baseTableName' AND vcreator='dc') > 0
+BEGIN
+  DROP VIEW dc.$baseTableName
+END
+
+commit
+
+#if( $partitions.size() > 0 )
+#set ($ix = 1)
+
+CREATE VIEW dc.$baseTableName AS
+#foreach( $part in $partitions )
+SELECT * FROM dc.$part.getTablename()
+#if( $ix < $partitions.size())
+UNION ALL
+#end
+#set ($ix = $ix + 1)
+#end
+
+GRANT SELECT ON dc.$baseTableName TO dc
+GRANT SELECT ON dc.$baseTableName TO dcbo
+
+commit
+
+#end

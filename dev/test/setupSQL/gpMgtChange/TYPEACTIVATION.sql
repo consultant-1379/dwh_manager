@@ -1,0 +1,3 @@
+insert into typeactivation (techpack_name, status, typename, tablelevel, storagetime, type, partitionplan) values ('EVENT_E_SGEH', 'ACTIVE', 'EVENT_E_SGEH_GROUP_TYPE_E_TAC', 'PLAIN', -1, 'GroupMgt', 'medium_plain');
+insert into typeactivation (techpack_name, status, typename, tablelevel, storagetime, type, partitionplan) values ('EVENT_E_SGEH', 'ACTIVE', 'EVENT_E_SGEH_GROUP_TYPE_E_APN', 'PLAIN', -1, 'GroupMgt', 'medium_plain');
+insert into typeactivation (techpack_name, status, typename, tablelevel, storagetime, type, partitionplan) values ('EVENT_E_SGEH', 'ACTIVE', 'EVENT_E_SGEH_GROUP_TYPE_E_IMSI', 'PLAIN', -1, 'GroupMgt', 'medium_plain');

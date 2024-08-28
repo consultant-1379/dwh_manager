@@ -1,0 +1,37 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$viewName' AND vcreator='dcpublic') > 0
+BEGIN
+  DROP VIEW dcpublic.$viewName
+END
+
+commit
+
+#set( $sqlIncluded = 0 )
+
+#foreach ( $col in $columns )
+  #if ($col.getIncludesql() == 1)
+    #set( $sqlIncluded = 1 )
+  #end
+#end
+
+#if ($sqlIncluded == 1)
+  #set( $first_col = 1 )
+  CREATE VIEW dcpublic.$viewName AS 
+  SELECT
+  #foreach ( $col in $columns )
+    #if ($col.getIncludesql() == 1)
+      #if( $first_col == 1 )
+        $col.getDataname()
+        #set( $first_col = 0 )
+      #else
+        ,$col.getDataname()
+      #end
+    #end 
+  #end
+  FROM dc.$viewName
+#end
+
+#if ($sqlIncluded == 1)
+  GRANT SELECT on dcpublic.$viewName TO dcpublic
+#end
+
+commit

@@ -1,0 +1,44 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$baseTableName' AND vcreator='dcpublic') > 0
+BEGIN
+  DROP VIEW dcpublic.$baseTableName
+END
+
+commit
+
+#if( $partitions.size() > 0 )
+
+#set( $sqlIncluded = 0 )
+
+#foreach ( $col in $columns )
+#if ($col.getIncludesql() == 1)
+#set( $sqlIncluded = 1 )
+#end
+#end
+
+#if ($sqlIncluded == 1)
+#set( $first_col = 1 )
+CREATE VIEW dcpublic.$baseTableName AS 
+SELECT
+#foreach ( $col in $columns )
+#if ($col.getIncludesql() == 1)
+#if( $first_col == 1 )
+$col.getDataname()
+#set( $first_col = 0 )
+#else
+,$col.getDataname()
+#end
+#end 
+#end
+FROM dc.$baseTableName
+#if($type.getTechpack_name() != "EVENT_E_SGEH" && $type.getTechpack_name() != "EVENT_E_TERM" && !($type.getTechpack_name() == "DWH_MONITOR" && ($type.getTypename() == "LOG_SESSION_COLLECTED_DATA" || $type.getTypename() == "LOG_AggregationStatus")))
+WHERE ROWSTATUS!='DUPLICATE' AND ROWSTATUS!='SUSPECTED'
+#end
+#end
+
+#if ($sqlIncluded == 1)
+GRANT SELECT on dcpublic.$baseTableName TO dcpublic
+#end
+
+commit
+
+#end

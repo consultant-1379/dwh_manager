@@ -1,0 +1,65 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$name' AND vcreator='dc') > 0 THEN
+  DROP VIEW $name;
+END IF;
+create view $name ( 
+$keyColumns,
+DATE_ID,
+HOUR_ID,
+MIN_ID,
+ROWSTATUS,
+BHTYPE,
+BHVALUE,
+PERIOD_DURATION,
+DC_RELEASE,
+DC_SOURCE,
+DC_TIMEZONE,
+MINUTE_OFFSET,
+SLIDING_WINDOW_SIZE,
+P_THRESHOLD,
+N_THRESHOLD,
+LOOKBACK_DAYS) as 
+select 
+	$keyValues, 
+    tt.DATE_ID,
+    tt.hour_id,
+    tt.min_id,
+    ${firsttable}ROWSTATUS,
+    $bhtype,
+    cast($bhcriteria as numeric(28,8)),
+    sum(${firsttable}PERIOD_DURATION),
+    ${firsttable}DC_RELEASE,
+    ${firsttable}DC_SOURCE,
+    ${firsttable}DC_TIMEZONE,
+    min(tt.OFFSET),
+    min(tt.WINDOWSIZE),
+	$pthreshold,
+ 	$nthreshold,
+    $lookback 
+	$from_COMMA
+	(SELECT distinct HOUR_ID,MIN_ID,WINDOWSIZE,OFFSET,S,E,DATE_ID
+	 	FROM
+		(SELECT distinct 
+			$windowsize as WINDOWSIZE,
+			$offset as OFFSET,
+			HOUR_ID,
+			MIN_ID,
+			datetime_id as S,
+			dateadd(minute,WINDOWSIZE,datetime_id) as E,
+			DATE_ID 
+		$from ) as d
+		WHERE
+        mod(MIN_ID+(HOUR_ID*60)+OFFSET,OFFSET) = 0
+	) as tt 
+	$where_ALLWAYS
+    (${firsttable}datetime_id) >= tt.S and
+    (${firsttable}datetime_id) < tt.E
+    group by 
+	$keyValues,
+    tt.DATE_ID,
+    tt.hour_id,
+    tt.min_id,
+    ${firsttable}ROWSTATUS,
+    $bhtype,
+    ${firsttable}DC_RELEASE,
+    ${firsttable}DC_SOURCE,
+    ${firsttable}DC_TIMEZONE;

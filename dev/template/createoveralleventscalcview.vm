@@ -1,0 +1,91 @@
+IF (SELECT count(*) FROM SYSVIEWS WHERE viewname='$viewName' AND vcreator='dc') > 0
+BEGIN
+  DROP VIEW dc.$viewName
+END
+
+commit
+
+#* Gets the columns in the form APN,(SUM(NO_OF_SUCCESSES)) as NO_OF_SUCCESSES,
+				(SUM(NO_OF_ERRORS)) as NO_OF_ERRORS,
+				(SUM(NO_OF_TOTAL_SUBSCRIBERS)) as NO_OF_TOTAL_SUBSCRIBERS,
+				(SUM(NO_OF_HOME_SUBSCRIBERS)) as NO_OF_HOME_SUBSCRIBERS,(SUM(NO_OF_NET_INIT_DEACTIVATES) 
+*#
+#if( $listOfViews.size() > 0 )
+  #set ($ix = 1)
+
+  #set( $first_col = 1 )
+  #set( $columnNames = "")
+
+  #foreach ( $col in $columns )
+    #if($col.getDataname() != "VALID")
+      #if( $first_col == 1 )
+        #if($col.getDataname().startsWith("NO_OF_"))
+          #set( $columnNames = "SUM($col.getDataname()) as $col.getDataname()")
+        #else
+          #set( $columnNames = "$col.getDataname()")
+        #end
+        #set( $first_col = 0 )
+      #else
+        #if($col.getDataname().startsWith("NO_OF_"))
+          #set( $currentColumn = "(SUM($col.getDataname())) as $col.getDataname()")
+          #set( $columnNames = "$columnNames,$currentColumn")
+        #else
+          #set( $currentColumn = "$col.getDataname()")
+          #set( $columnNames = "$columnNames,$currentColumn")
+      #end
+    #end
+  #end
+#end
+
+#set( $first_col = 1 )
+
+CREATE VIEW dc.$viewName AS(
+SELECT
+$columnNames
+FROM(
+
+## Gets the columns in the form APN,NO_OF_SUCCESSES,NO_OF_ERRORS,NO_OF_TOTAL_SUBSCRIBERS,NO_OF_HOME_SUBSCRIBERS,NO_OF_NET_INIT_DEACTIVATES,DATE_ID,YEAR_ID,MONTH_ID,DAY_ID,HOUR_ID,MIN_ID,DATETIME_ID,TIMEZONE 
+
+#foreach( $view in $listOfViews )
+  SELECT 
+  #foreach ( $col in $columns )
+    #if($col.getDataname() != "VALID")
+      #if( $first_col == 1 )
+        $col.getDataname()
+        #set( $first_col = 0 )
+      #else
+        ,$col.getDataname()
+      #end
+    #end
+  #end
+  FROM dc.$view
+  #if( $ix < $listOfViews.size())
+    UNION ALL
+  #end
+  #set ($ix = $ix + 1)
+  #set( $first_col = 1 )
+#end
+) AS $viewName
+GROUP BY
+
+## Gets the group by columns
+
+#foreach ( $col in $columns )
+  #if($col.getDataname() != "VALID" && !($col.getDataname().startsWith("NO_OF_")))
+    #if( $first_col == 1 )
+      $col.getDataname()
+      #set( $first_col = 0 )
+    #else
+      ,$col.getDataname()
+    #end 
+  #end
+  #if($col.getDataname() == "NO_OF_PAGING_ATTEMPTS")
+    		,CASE ${viewName}.NO_OF_PAGING_ATTEMPTS WHEN 0 THEN 0 ELSE 1 END
+  #end
+#end
+) GRANT SELECT ON dc.$viewName TO dc
+GRANT SELECT ON dc.$viewName TO dcbo
+
+commit
+
+#end

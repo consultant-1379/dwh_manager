@@ -1,0 +1,138 @@
+<project name="dwhmanager" default="compile" xmlns:sonar="antlib:org.sonar.ant">
+
+  <property name="pack.name" value="dwhmanager"/>
+  <property name="pack.version" value="5-0-0"/>
+
+  <!-- Attention! pack.dir have to be under tmp-dir because the actual build is done there --> 
+  <property name="pack.dir" value="/proj/eiffel013_config_fem6s11/eiffel_home/jobs/Git_dwhmanager_build/dwh_manager/dev"/>
+  
+  <!-- Eniq Jars -->
+  <property name="eniq.common_utilities.dir" value="/proj/eiffel013_config_fem6s11/eiffel_home/jobs/Git_dwhmanager_build/common_utilities/build/common_utilities/"/>
+  <property name="eniq.engine.dir" value="/proj/eiffel013_config_fem6s11/eiffel_home/jobs/Git_dwhmanager_build/engine/build/engine/"/>
+  <property name="eniq.repository.dir" value="/proj/eiffel013_config_fem6s11/eiffel_home/jobs/Git_dwhmanager_build/repository/build/repository/"/>
+  <property name="eniq.licensing.dir" value="/proj/eiffel013_config_fem6s11/eiffel_home/jobs/Git_dwhmanager_build/licensing/build/licensing/"/>
+
+  <!-- 3PP Jars -->
+	<property name="3pp.sybase.dir" value="/proj/eiffel013_config_fem6s11/3pp/sybase/sybase_iq"/>
+ <!-- jconn jar -->
+  <property name="3pp.dbunit.dir" value="/proj/eiffel013_config_fem6s11/3pp/dbunit/dbunit/v_2_4_8/prod"/>
+  <property name="3pp.velocity.dir" value="/proj/eiffel013_config_fem6s11/3pp/apache/jakarta_velocity/v1_7/prod"/>
+  <property name="3pp.junit.dir" value="/proj/eiffel013_config_fem6s11/3pp/junit/v4_5/prod"/>
+  
+  <target name="precompile"/>
+  
+  <target name="compile">
+    <mkdir dir="${pack.dir}/classes"/>
+    <javac srcdir="${pack.dir}/src" destdir="${pack.dir}/classes"
+           failonerror="true"
+           debug="on"
+           optimize="off" 
+           deprecation="off">
+<compilerarg value="-Xlint:all" />
+      <classpath>
+        <pathelement path="${classpath}"/>
+		<fileset dir="${eniq.common_utilities.dir}">
+	    	<include name="**/*.jar"/>
+	    </fileset>
+		<fileset dir="${eniq.engine.dir}">
+	    	<include name="**/*.jar"/>
+	    </fileset>
+		<fileset dir="${eniq.licensing.dir}">
+	    	<include name="**/*.jar"/>
+	    </fileset>
+		<fileset dir="${eniq.repository.dir}">
+	    	<include name="**/*.jar"/>
+	    </fileset>
+		<fileset dir="${3pp.dbunit.dir}">
+	    	<include name="**/*.jar"/>
+	    </fileset>
+		<fileset dir="${3pp.velocity.dir}">
+	    	<include name="**/*.jar"/>
+	    </fileset>
+ 		<fileset dir="${3pp.junit.dir}">
+	    	<include name="**/*.jar"/>
+	    </fileset>
+        <fileset dir="${3pp.sybase.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+     </classpath>
+    </javac>
+  </target>
+
+  <target name="postcompile">
+	<copy todir="${pack.dir}/classes">
+		<fileset dir="${pack.dir}/jar"/> 
+	</copy>
+  </target>
+
+  <!-- ========= Define the main properties of this project ========= -->
+  <property name="src.dir" value="src" />
+  <property name="build.dir" value="target" />
+  <property name="classes.dir" value="${build.dir}/classes" />
+
+  <!-- Define the SonarQube global properties (the most usual way is to pass these properties via the command line) -->
+  <property name="sonar.host.url" value="https://sonarqube.lmera.ericsson.se" />
+
+  <!-- Define the Sonar properties -->
+  <property name="sonar.projectKey" value="sonarqube-scanner-dwhmanager" />
+  <property name="sonar.projectName" value="Eniq Dwhmanager" />
+  <property name="sonar.projectVersion" value="1.0" />
+  <property name="sonar.sources" value="/proj/eiffel013_config_fem6s11/eiffel_home/jobs/Git_dwhmanager_build/dwh_manager/dev/src" />
+  <property name="sonar.java.binaries" value="/proj/eiffel013_config_fem6s11/eiffel_home/jobs/Git_dwhmanager_build/dwh_manager/dev" />
+  <property name="sonar.sourceEncoding" value="UTF-8" />
+  <property name="sonar.login" value="b140730794b2b53dc841840498358c11213d3ba9" />
+  <property name="sonar.projectBaseDir" value="/proj/eiffel013_config_fem6s11/eiffel_home/jobs/Git_dwhmanager_build/dwh_manager/dev" />
+
+
+  <target name="compile_sonar">
+      <javac srcdir="${pack.dir}/src" destdir="${pack.dir}/classes" fork="true" debug="true" includeAntRuntime="false" />
+  </target>
+
+  <!-- ========= Define SonarQube Scanner for Ant Target ========= -->
+  <target name="sonar">
+      <taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+          <!-- Update the following line, or put the "sonar-ant-task-*.jar" file in your "$HOME/.ant/lib" folder -->
+          <classpath path="/proj/esjkadm100/Sonar/sonarqube-ant-task-2.7.0.1612.jar" />
+      </taskdef>
+
+      <!-- Execute SonarQube Scanner for Ant Analysis -->
+      <sonar:sonar />
+  </target>
+    <target name="clean">
+        <delete dir="${pack.dir}/classes"/>
+    </target>
+
+  <!-- ========= The main target "all" ========= -->
+  <target name="all_sonar" depends="sonar,clean" />
+
+
+
+	
+
+<target name="sonarQualityCheck" description="SonarQube Quality Gate check"> 
+	 <exec executable="/bin/sh" outputproperty="qualitySleep"> 
+		 <arg value="-c" /> 
+		 <arg value="sleep 60" /> 
+	 </exec>
+	<exec executable="curl" outputproperty="sonarreturnCode">
+		<arg value="-o" />
+		<arg value="/proj/esjkadm100/Sonar/sonarOut.txt" />
+		<arg value="-k" />
+        <arg value="-u" />
+        <arg value="${sonar.login}:" />
+        <arg value="https://sonarqube.lmera.ericsson.se/api/qualitygates/project_status?projectKey=${sonar.projectKey}" />
+    </exec>
+    <exec executable="/bin/sh" outputproperty="sonarCode">
+        <arg value="-c" />
+        <arg value="/proj/eiffel013_config_fem6s11/tools/sonarQualityGateCheck.sh" />
+    </exec>
+    <echo message="Quality report returned ${sonarCode}"/>
+    <condition property="qualityMatch">
+        
+            <equals arg1="${sonarCode}" arg2="ERROR"/>
+        
+    </condition>
+    <fail if="qualityMatch" message="Quality check did not pass, hence marking build as failed!!!."/>
+</target>
+
+</project>

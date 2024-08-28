@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/hsqldb/v2_2_4/hsqldb.jar"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/junit/v4_5/prod/junit-4.5.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/apache/jakarta_velocity/v1_5/prod/velocity-dep-1.5.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/easymock/cglib/cglib-2.2.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/easymock/cglib/cglib-nodep-2.2.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/easymock/easymock-2.5/easymock-2.5.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/easymock/easymockclassextension2.4/easymockclassextension.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/bsh-core-2.0b4.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/cglib-2.1_3-src.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/cglib-nodep-2.1_3.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/hamcrest-core-1.1.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/hamcrest-library-1.1.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/jmock-2.5.1.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/jmock-junit3-2.5.1.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/jmock-junit4-2.5.1.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/jmock-legacy-2.5.1.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/jmock-script-2.5.1.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/jmock-2.5.1/objenesis-1.0.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/dbunit/dbunit/v2_4_7/prod/dbunit-2.4.7.jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/slf4j-1.5.11/slf4j-api-1.5.11.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/repository"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/slf4j-1.5.11/slf4j-nop-1.5.11.jar"/>
+	<classpathentry kind="src" path="/ETLC_TestHelper"/>
+	<classpathentry kind="src" path="/engine"/>
+	<classpathentry kind="src" path="/licensing"/>
+	<classpathentry kind="lib" path="jar"/>
+	<classpathentry kind="var" path="VIEW_PATH/eniq_3pp/sybase/sybase_iq/v15_1/client/prod/jconn3.jar"/>
+	<classpathentry kind="output" path="classes"/>
+</classpath>
